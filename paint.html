@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>HTML5 Paint</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+      *, *:before, *:after {
+        box-sizing: border-box;
+      }
+      .toolbar {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 5px;
+        width: 900px;
+      }
+      #drawingboard {
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button title="Line"><i class="fa fa-pencil"></i></button>
+    </div>
+    <canvas id="drawingboard" width="900" height="600"></canvas>
+    <script src="paint.js"></script>
+    <script>
+      var paint;
+
+      function startDrawing(event) {
+        paint.basePoint = new Point(event.screenX - paint.canvas.offsetLeft,
+                event.screenY - paint.canvas.offsetTop);
+        paint.isDrawing = true;
+      }
+
+      function stopDrawing(event) {
+        paint.isDrawing = false;
+      }
+
+      function drawing(event) {
+        var pt = new Point(event.screenX - paint.canvas.offsetLeft,
+                event.screenY - paint.canvas.offsetTop);
+        if (paint.isDrawing) {
+          var l = new Line(paint.context, paint.basePoint, pt);
+          l.draw();
+          paint.basePoint = pt;
+        }
+      }
+
+      window.onload = function () {
+        paint = new Paint();
+        paint.currentTool = paint.LINE;
+        paint.canvas.addEventListener('mousedown', startDrawing, false);
+        paint.canvas.addEventListener('mouseup', stopDrawing, false);
+        paint.canvas.addEventListener('mousemove', drawing, false);
+      };
+    </script>
+  </body>
+</html>
