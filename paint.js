@@ -21,7 +21,7 @@ function Line(context, p1, p2, color, transparency) {
   this.transparency = (transparency ? transparency : 1);
 }
 
-Line.prototype.draw = function () {
+Line.prototype.stroke = function () {
   this.context.beginPath();
   this.context.moveTo(this.p1.x, this.p1.y);
   this.context.lineTo(this.p2.x, this.p2.y);
@@ -64,8 +64,8 @@ Rect.prototype.fill = function () {
   this.context.fillRect(this.p.x, this.p.y, this.d.w, this.d.h);
 }
 
-function Circle(context, p, r, color, transparency) {
-  this.center = p;
+function Circle(context, center, r, color, transparency) {
+  this.center = center;
   this.context = context;
   this.r = r;
   this.angleStart = 0;
@@ -151,12 +151,26 @@ function Paint() {
   this.LINE = 'line';
   this.RECT = 'rect';
   this.CIRCLE = 'circle';
+  this.FILLED_CIRCLE = 'f_circle';
   this.SELECT = 'select';
   
   this.currentTool = this.SELECT;
   this.basePoint = new Point(0, 0);
   
   this.isDrawing = false;
+  
+  this.content = [];
+}
+
+Paint.prototype.clear = function() {
+  this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+}
+
+Paint.prototype.repaint = function() {
+  this.clear();
+  this.content.forEach(function(element, index) {
+    element.stroke();
+  })
 }
 
 Paint.prototype.setLineWidth = function (width) {
@@ -174,3 +188,15 @@ Paint.prototype.setLineWidth = function (width) {
 Paint.prototype.setLineCap = function (lineCap) {
   this.context.lineCap = lineCap;
 };
+
+Paint.prototype.setCurrentTool = function(tool) {
+  this.currentTool = tool;
+  if (tool == this.CIRCLE || tool == this.LINE || tool == this.RECT) {
+    this.canvas.style.cursor = 'pointer';
+  } else if (tool == this.SELECT) {
+    this.canvas.style.cursor = 'grab';
+  } else {
+    this.canvas.style.cursor = 'default';
+  }
+  
+}

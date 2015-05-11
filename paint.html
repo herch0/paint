@@ -23,7 +23,9 @@
   </head>
   <body>
     <div class="toolbar">
-      <button title="Line"><i class="fa fa-pencil"></i></button>
+      <button title="Line" id="line_tool"><i class="fa fa-pencil"></i></button>
+      <button title="Circle" id="circle_tool"><i class="fa fa-circle-o"></i></button>
+      <button title="Filled Circle" id="fcircle_tool"><i class="fa fa-circle"></i></button>
     </div>
     <canvas id="drawingboard" width="900" height="600"></canvas>
     <script src="paint.js"></script>
@@ -31,31 +33,74 @@
       var paint;
 
       function startDrawing(event) {
-        paint.basePoint = new Point(event.screenX - paint.canvas.offsetLeft,
-                event.screenY - paint.canvas.offsetTop);
+        paint.basePoint = new Point(event.clientX - paint.canvas.offsetLeft,
+                event.clientY - paint.canvas.offsetTop);
         paint.isDrawing = true;
       }
 
       function stopDrawing(event) {
         paint.isDrawing = false;
-      }
-
-      function drawing(event) {
-        var pt = new Point(event.screenX - paint.canvas.offsetLeft,
-                event.screenY - paint.canvas.offsetTop);
-        if (paint.isDrawing) {
+        var pt = new Point(event.clientX - paint.canvas.offsetLeft,
+                event.clientY - paint.canvas.offsetTop);
+        if (paint.currentTool == paint.LINE) {
           var l = new Line(paint.context, paint.basePoint, pt);
           l.draw();
           paint.basePoint = pt;
+        } else if (paint.currentTool == paint.CIRCLE) {
+          var centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
+          var centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
+          var center = new Point(centerX, centerY);
+          var c = new Circle(paint.context, center, (pt.x - paint.basePoint.x) / 2);
+          paint.content.push(c);
+          paint.repaint();
+        }
+      }
+
+      function drawing(event) {
+        var pt = new Point(event.clientX - paint.canvas.offsetLeft,
+                event.clientY - paint.canvas.offsetTop);
+        if (paint.isDrawing) {
+          if (paint.currentTool == paint.LINE) {
+            var l = new Line(paint.context, paint.basePoint, pt);
+            l.stroke();
+            paint.basePoint = pt;
+          } else if (paint.currentTool == paint.CIRCLE) {
+            paint.repaint();
+            var centerX, centerY;
+            if (pt.x > paint.basePoint.x) {
+              centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
+            } else {
+              centerX = paint.basePoint.x - (paint.basePoint.x - pt.x) / 2;
+            }
+            if (pt.y > paint.basePoint.y) {
+              centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
+            } else {
+              centerY = paint.basePoint.y - (paint.basePoint.y - pt.y) / 2;
+            }
+//            var centerY = paint.basePoint.y + (Math.abs(pt.y - paint.basePoint.y) / 2);
+            var center = new Point(centerX, centerY);
+            var c = new Circle(paint.context, center, Math.abs(pt.x - paint.basePoint.x) / 2);
+            c.stroke();
+          }
         }
       }
 
       window.onload = function () {
         paint = new Paint();
-        paint.currentTool = paint.LINE;
+        paint.setCurrentTool(paint.LINE);
         paint.canvas.addEventListener('mousedown', startDrawing, false);
         paint.canvas.addEventListener('mouseup', stopDrawing, false);
         paint.canvas.addEventListener('mousemove', drawing, false);
+
+        document.getElementById("line_tool").addEventListener('click', function () {
+          paint.setCurrentTool(paint.LINE);
+        });
+        document.getElementById("circle_tool").addEventListener('click', function () {
+          paint.setCurrentTool(paint.CIRCLE);
+        });
+        document.getElementById("fcircle_tool").addEventListener('click', function () {
+          paint.setCurrentTool(paint.FILLED_CIRCLE);
+        });
       };
     </script>
   </body>
