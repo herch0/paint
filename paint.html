@@ -23,19 +23,24 @@
   </head>
   <body>
     <div class="toolbar">
-      <button title="Line" id="line_tool"><i class="fa fa-pencil"></i></button>
+      <button title="Pencil" id="pencil_tool"><i class="fa fa-pencil"></i></button>
+      <button title="Line" id="line_tool"><i class="fa fa-minus"></i></button>
       <button title="Circle" id="circle_tool"><i class="fa fa-circle-o"></i></button>
       <button title="Filled Circle" id="fcircle_tool"><i class="fa fa-circle"></i></button>
     </div>
     <canvas id="drawingboard" width="900" height="600"></canvas>
     <script src="paint.js"></script>
     <script>
-      var paint;
+      var paint, pencil;
 
       function startDrawing(event) {
         paint.basePoint = new Point(event.clientX - paint.canvas.offsetLeft,
                 event.clientY - paint.canvas.offsetTop);
+        paint.previousPoint = paint.basePoint;
         paint.isDrawing = true;
+        if (paint.currentTool == paint.PENCIL) {
+          pencil = new Pencil(paint.context);
+        }
       }
 
       function stopDrawing(event) {
@@ -44,8 +49,17 @@
                 event.clientY - paint.canvas.offsetTop);
         if (paint.currentTool == paint.LINE) {
           var l = new Line(paint.context, paint.basePoint, pt);
-          l.draw();
-          paint.basePoint = pt;
+          paint.content.push(l);
+          paint.repaint();
+          paint.basePoint = null;
+        } else if (paint.currentTool == paint.PENCIL) {
+          var l = new Line(paint.context, paint.previousPoint, pt);
+          pencil.addLine(l);
+          paint.content.push(pencil);
+          paint.repaint();
+          paint.basePoint = null;
+          paint.previousPoint = null;
+          pencil = null;
         } else if (paint.currentTool == paint.CIRCLE) {
           var centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
           var centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
@@ -53,6 +67,7 @@
           var c = new Circle(paint.context, center, (pt.x - paint.basePoint.x) / 2);
           paint.content.push(c);
           paint.repaint();
+          paint.basePoint = null;
         }
       }
 
@@ -61,9 +76,15 @@
                 event.clientY - paint.canvas.offsetTop);
         if (paint.isDrawing) {
           if (paint.currentTool == paint.LINE) {
+            paint.repaint();
             var l = new Line(paint.context, paint.basePoint, pt);
             l.stroke();
-            paint.basePoint = pt;
+//            paint.basePoint = pt;
+          } else if (paint.currentTool == paint.PENCIL) {
+            var l = new Line(paint.context, paint.previousPoint, pt);
+            pencil.addLine(l);
+            l.stroke();
+            paint.previousPoint = pt;
           } else if (paint.currentTool == paint.CIRCLE) {
             paint.repaint();
             var centerX, centerY;
@@ -94,6 +115,9 @@
 
         document.getElementById("line_tool").addEventListener('click', function () {
           paint.setCurrentTool(paint.LINE);
+        });
+        document.getElementById("pencil_tool").addEventListener('click', function () {
+          paint.setCurrentTool(paint.PENCIL);
         });
         document.getElementById("circle_tool").addEventListener('click', function () {
           paint.setCurrentTool(paint.CIRCLE);

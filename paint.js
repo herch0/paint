@@ -8,9 +8,40 @@ function Point(x, y) {
   this.y = y;
 }
 
+Point.prototype.toString = function () {
+  return this.x + ", " + this.y;
+}
+
 function Dimension(w, h) {
   this.w = w;
   this.h = h;
+}
+
+function Pencil(context, color, transparency) {
+  this.lines = [];
+  this.context = context;
+  this.color = (color ? color : "#000");
+  this.transparency = (transparency ? transparency : 1);
+}
+
+Pencil.prototype.addLine = function (line) {
+  this.lines.push(line);
+};
+
+Pencil.prototype.stroke = function () {
+  this.context.beginPath();
+  if (this.color) {
+    this.context.strokeStyle = this.color;
+  }
+  if (this.transparency) {
+    this.context.globalAlpha = this.transparency;
+  }
+  var that = this;
+  this.lines.forEach(function (element, index) {
+    that.context.moveTo(element.p1.x, element.p1.y);
+    that.context.lineTo(element.p2.x, element.p2.y);
+    that.context.stroke();
+  })
 }
 
 function Line(context, p1, p2, color, transparency) {
@@ -149,26 +180,28 @@ function Paint() {
   this.ROUND = 'round';
   this.SQUARE = 'square';
   this.LINE = 'line';
+  this.PENCIL = 'pencil';
   this.RECT = 'rect';
   this.CIRCLE = 'circle';
   this.FILLED_CIRCLE = 'f_circle';
   this.SELECT = 'select';
-  
+
   this.currentTool = this.SELECT;
   this.basePoint = new Point(0, 0);
-  
+  this.previousPoint = this.basePoint;
+
   this.isDrawing = false;
-  
+
   this.content = [];
 }
 
-Paint.prototype.clear = function() {
+Paint.prototype.clear = function () {
   this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 }
 
-Paint.prototype.repaint = function() {
+Paint.prototype.repaint = function () {
   this.clear();
-  this.content.forEach(function(element, index) {
+  this.content.forEach(function (element, index) {
     element.stroke();
   })
 }
@@ -189,14 +222,14 @@ Paint.prototype.setLineCap = function (lineCap) {
   this.context.lineCap = lineCap;
 };
 
-Paint.prototype.setCurrentTool = function(tool) {
+Paint.prototype.setCurrentTool = function (tool) {
   this.currentTool = tool;
-  if (tool == this.CIRCLE || tool == this.LINE || tool == this.RECT) {
+  if (tool == this.CIRCLE || tool == this.LINE || tool == this.RECT || tool == this.PENCIL) {
     this.canvas.style.cursor = 'pointer';
   } else if (tool == this.SELECT) {
     this.canvas.style.cursor = 'grab';
   } else {
     this.canvas.style.cursor = 'default';
   }
-  
+
 }
