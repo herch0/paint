@@ -95,7 +95,7 @@ Rect.prototype.fill = function () {
   this.context.fillRect(this.p.x, this.p.y, this.d.w, this.d.h);
 }
 
-function Circle(context, center, r, color, transparency) {
+function Circle(context, center, r, filled, color, transparency) {
   this.center = center;
   this.context = context;
   this.r = r;
@@ -103,6 +103,7 @@ function Circle(context, center, r, color, transparency) {
   this.angleEnd = Math.PI * 2;
   this.color = (color ? color : '#000');
   this.transparency = (transparency ? transparency : 1);
+  this.filled = filled;
 }
 
 Circle.prototype.stroke = function () {
@@ -202,7 +203,11 @@ Paint.prototype.clear = function () {
 Paint.prototype.repaint = function () {
   this.clear();
   this.content.forEach(function (element, index) {
-    element.stroke();
+    if (!element.filled) {
+      element.stroke();
+    } else {
+      element.fill();
+    }
   })
 }
 
@@ -224,7 +229,8 @@ Paint.prototype.setLineCap = function (lineCap) {
 
 Paint.prototype.setCurrentTool = function (tool) {
   this.currentTool = tool;
-  if (tool == this.CIRCLE || tool == this.LINE || tool == this.RECT || tool == this.PENCIL) {
+  if (tool == this.CIRCLE || tool == this.FILLED_CIRCLE
+          || tool == this.LINE || tool == this.RECT || tool == this.PENCIL) {
     this.canvas.style.cursor = 'pointer';
   } else if (tool == this.SELECT) {
     this.canvas.style.cursor = 'grab';
