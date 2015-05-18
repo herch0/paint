@@ -5,7 +5,8 @@
     <title>HTML5 Paint</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!--<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">-->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
       *, *:before, *:after {
         box-sizing: border-box;
@@ -40,6 +41,8 @@
       <button title="Line" id="line_tool" class="toolbar_btn inactive"><i class="fa fa-minus"></i></button>
       <button title="Circle" id="circle_tool" class="toolbar_btn inactive"><i class="fa fa-circle-o"></i></button>
       <button title="Filled Circle" id="fcircle_tool" class="toolbar_btn inactive"><i class="fa fa-circle"></i></button>
+      <button title="Rectangle" id="rect_tool" class="toolbar_btn inactive"><i class="fa fa-square-o"></i></button>
+      <button title="Filled Rectangle" id="frect_tool" class="toolbar_btn inactive"><i class="fa fa-square"></i></button>
     </div>
     <canvas id="drawingboard" width="900" height="600"></canvas>
     <script src="paint.js"></script>
@@ -80,6 +83,15 @@
           var filled = (paint.currentTool == paint.FILLED_CIRCLE);
           var c = new Circle(paint.context, center, Math.abs(pt.x - paint.basePoint.x) / 2, filled);
           paint.content.push(c);
+          paint.repaint();
+          paint.basePoint = null;
+        } else if (paint.currentTool == paint.RECT || paint.currentTool == paint.FILLED_RECT) {
+          var width = pt.x - paint.basePoint.x;
+          var height = pt.y - paint.basePoint.y;
+          var filled = (paint.currentTool == paint.FILLED_RECT);
+          var d = new Dimension(width, height);
+          var rect = new Rect(paint.context, paint.basePoint, d, filled);
+          paint.content.push(rect);
           paint.repaint();
           paint.basePoint = null;
         }
@@ -124,7 +136,19 @@
             } else {
               c.fill();
             }
-          }
+          } else if (paint.currentTool == paint.RECT || paint.currentTool == paint.FILLED_RECT) {
+            paint.repaint();
+            var width = pt.x - paint.basePoint.x;
+            var height = pt.y - paint.basePoint.y;
+            var d = new Dimension(width, height);
+            var rect = new Rect(paint.context, paint.basePoint, d);
+            if (paint.currentTool == paint.RECT) {
+              rect.stroke();
+            } else {
+              rect.fill();
+            }
+            paint.previousPoint = pt;
+          } 
         }
       }
 
@@ -160,6 +184,14 @@
         document.getElementById("fcircle_tool").addEventListener('click', function () {
           enableButton(this);
           paint.setCurrentTool(paint.FILLED_CIRCLE);
+        });
+        document.getElementById("rect_tool").addEventListener('click', function () {
+          enableButton(this);
+          paint.setCurrentTool(paint.RECT);
+        });
+        document.getElementById("frect_tool").addEventListener('click', function () {
+          enableButton(this);
+          paint.setCurrentTool(paint.FILLED_RECT);
         });
       };
     </script>

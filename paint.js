@@ -65,12 +65,13 @@ Line.prototype.stroke = function () {
   this.context.stroke();
 }
 
-function Rect(context, p, d, color, transparency) {
-  this.p = p;
-  this.d = d;
+function Rect(context, basePoint, dimension, filled, color, transparency) {
+  this.basePoint = basePoint;
+  this.dimension = dimension;
   this.context = context;
   this.color = (color ? color : "#000");
   this.transparency = (transparency ? transparency : 1);
+  this.filled = filled;
 }
 
 Rect.prototype.stroke = function () {
@@ -81,7 +82,7 @@ Rect.prototype.stroke = function () {
   if (this.transparency) {
     this.context.globalAlpha = this.transparency;
   }
-  this.context.strokeRect(this.p.x, this.p.y, this.d.w, this.d.h);
+  this.context.strokeRect(this.basePoint.x, this.basePoint.y, this.dimension.w, this.dimension.h);
 }
 
 Rect.prototype.fill = function () {
@@ -92,7 +93,7 @@ Rect.prototype.fill = function () {
   if (this.transparency) {
     this.context.globalAlpha = this.transparency;
   }
-  this.context.fillRect(this.p.x, this.p.y, this.d.w, this.d.h);
+  this.context.fillRect(this.basePoint.x, this.basePoint.y, this.dimension.w, this.dimension.h);
 }
 
 function Circle(context, center, r, filled, color, transparency) {
@@ -183,6 +184,7 @@ function Paint() {
   this.LINE = 'line';
   this.PENCIL = 'pencil';
   this.RECT = 'rect';
+  this.FILLED_RECT = 'f_rect';
   this.CIRCLE = 'circle';
   this.FILLED_CIRCLE = 'f_circle';
   this.SELECT = 'select';
@@ -229,7 +231,7 @@ Paint.prototype.setLineCap = function (lineCap) {
 
 Paint.prototype.setCurrentTool = function (tool) {
   this.currentTool = tool;
-  if (tool == this.CIRCLE || tool == this.FILLED_CIRCLE
+  if (tool == this.CIRCLE || tool == this.FILLED_CIRCLE || tool == this.FILLED_RECT
           || tool == this.LINE || tool == this.RECT || tool == this.PENCIL) {
     this.canvas.style.cursor = 'pointer';
   } else if (tool == this.SELECT) {
