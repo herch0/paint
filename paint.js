@@ -190,6 +190,7 @@ function Paint() {
   this.SELECT = 'select';
 
   this.currentTool = this.SELECT;
+  this.currentColor = 'black';
   this.basePoint = new Point(0, 0);
   this.previousPoint = this.basePoint;
 

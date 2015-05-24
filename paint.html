@@ -5,8 +5,7 @@
     <title>HTML5 Paint</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">-->
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <style>
       *, *:before, *:after {
         box-sizing: border-box;
@@ -43,157 +42,198 @@
       <button title="Filled Circle" id="fcircle_tool" class="toolbar_btn inactive"><i class="fa fa-circle"></i></button>
       <button title="Rectangle" id="rect_tool" class="toolbar_btn inactive"><i class="fa fa-square-o"></i></button>
       <button title="Filled Rectangle" id="frect_tool" class="toolbar_btn inactive"><i class="fa fa-square"></i></button>
+      <select id="colors">
+        <script>
+          var colors = ["black", "silver", "gray", "white", "maroon", "red", "purple", "fuchsia", "green", "lime", "olive", "yellow", "navy", "blue", "teal", "aqua", "orange", "aliceblue", "antiquewhite", "aquamarine", "azure", "beige", "bisque", "blanchedalmond", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki", "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen", "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue", "dimgray", "dimgrey", "dodgerblue", "firebrick", "floralwhite", "forestgreen", "gainsboro", "ghostwhite", "gold", "goldenrod", "greenyellow", "grey", "honeydew", "hotpink", "indianred", "indigo", "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey", "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey", "lightsteelblue", "lightyellow", "limegreen", "linen", "mediumaquamarine", "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise", "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite", "oldlace", "olivedrab", "orangered", "orchid", "palegoldenrod", "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum", "powderblue", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue", "tan", "thistle", "tomato", "turquoise", "violet", "wheat", "whitesmoke", "yellowgreen", "rebeccapurple"];
+          colors.forEach(function (element) {
+            document.write('<option value="'+element+'" style="background: '+element+'">'+element+'</option>')
+          })
+        </script>
+      </select>
+      <button title="Save" id="save" class="toolbar_btn inactive"><i class="fa fa-floppy-o"></i></button>
     </div>
     <canvas id="drawingboard" width="900" height="600"></canvas>
     <script src="paint.js"></script>
     <script>
-      var paint, pencil;
-
-      function startDrawing(event) {
-        paint.basePoint = new Point(event.clientX - paint.canvas.offsetLeft,
-                event.clientY - paint.canvas.offsetTop);
-        paint.previousPoint = paint.basePoint;
-        paint.isDrawing = true;
-        if (paint.currentTool == paint.PENCIL) {
-          pencil = new Pencil(paint.context);
+        var paint, pencil;
+        
+        function canvasClicked(event) {
+          paint.content.forEach(function(element) {
+            var x = event.clientX - paint.canvas.offsetLeft;
+            var y = event.clientY - paint.canvas.offsetTop;
+            if (element instanceof Rect) {
+              if (element.basePoint.x <= x && element.basePoint.y <= y 
+                      && (element.basePoint.x + element.dimension.width) > x
+                      && (element.basePoint.y + element.dimension.height) > y)
+              console.log('rect clicked');
+            } else {
+              console.log('rect ot clicked');
+            }
+//            else if (element instanceof Circle) {
+//              console.log('circle clicked');
+//            } else if (element instanceof Line) {
+//              console.log('ine clicked');
+//            }
+          });
+          startDrawing(event);
         }
-      }
 
-      function stopDrawing(event) {
-        paint.isDrawing = false;
-        var pt = new Point(event.clientX - paint.canvas.offsetLeft,
-                event.clientY - paint.canvas.offsetTop);
-        if (paint.currentTool == paint.LINE) {
-          var l = new Line(paint.context, paint.basePoint, pt);
-          paint.content.push(l);
-          paint.repaint();
-          paint.basePoint = null;
-        } else if (paint.currentTool == paint.PENCIL) {
-          var l = new Line(paint.context, paint.previousPoint, pt);
-          pencil.addLine(l);
-          paint.content.push(pencil);
-          paint.repaint();
-          paint.basePoint = null;
-          paint.previousPoint = null;
-          pencil = null;
-        } else if (paint.currentTool == paint.CIRCLE || paint.currentTool == paint.FILLED_CIRCLE) {
-          var centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
-          var centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
-          var center = new Point(centerX, centerY);
-          var filled = (paint.currentTool == paint.FILLED_CIRCLE);
-          var c = new Circle(paint.context, center, Math.abs(pt.x - paint.basePoint.x) / 2, filled);
-          paint.content.push(c);
-          paint.repaint();
-          paint.basePoint = null;
-        } else if (paint.currentTool == paint.RECT || paint.currentTool == paint.FILLED_RECT) {
-          var width = pt.x - paint.basePoint.x;
-          var height = pt.y - paint.basePoint.y;
-          var filled = (paint.currentTool == paint.FILLED_RECT);
-          var d = new Dimension(width, height);
-          var rect = new Rect(paint.context, paint.basePoint, d, filled);
-          paint.content.push(rect);
-          paint.repaint();
-          paint.basePoint = null;
+        function startDrawing(event) {
+          paint.basePoint = new Point(event.clientX - paint.canvas.offsetLeft,
+                  event.clientY - paint.canvas.offsetTop);
+          paint.previousPoint = paint.basePoint;
+          paint.isDrawing = true;
+          if (paint.currentTool == paint.PENCIL) {
+            pencil = new Pencil(paint.context, paint.currentColor);
+          }
         }
-      }
 
-      function drawing(event) {
-        var pt = new Point(event.clientX - paint.canvas.offsetLeft,
-                event.clientY - paint.canvas.offsetTop);
-        if (paint.isDrawing) {
+        function stopDrawing(event) {
+          paint.isDrawing = false;
+          var pt = new Point(event.clientX - paint.canvas.offsetLeft,
+                  event.clientY - paint.canvas.offsetTop);
           if (paint.currentTool == paint.LINE) {
+            var l = new Line(paint.context, paint.basePoint, pt, paint.currentColor);
+            paint.content.push(l);
             paint.repaint();
-            var l = new Line(paint.context, paint.basePoint, pt);
-            l.stroke();
+            paint.basePoint = null;
           } else if (paint.currentTool == paint.PENCIL) {
             var l = new Line(paint.context, paint.previousPoint, pt);
             pencil.addLine(l);
-            l.stroke();
-            paint.previousPoint = pt;
+            paint.content.push(pencil);
+            paint.repaint();
+            paint.basePoint = null;
+            paint.previousPoint = null;
+            pencil = null;
           } else if (paint.currentTool == paint.CIRCLE || paint.currentTool == paint.FILLED_CIRCLE) {
-            paint.repaint();
-            var centerX, centerY;
-            if (pt.x > paint.basePoint.x) {
-              centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
-            } else {
-              centerX = paint.basePoint.x - (paint.basePoint.x - pt.x) / 2;
-            }
-            if (pt.y > paint.basePoint.y) {
-              centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
-            } else {
-              centerY = paint.basePoint.y - (paint.basePoint.y - pt.y) / 2;
-            }
-            var radius;
-            if (Math.abs(pt.x - paint.basePoint.x) > Math.abs(pt.y - paint.basePoint.y)) {
-              radius = Math.abs(pt.x - paint.basePoint.x) / 2;
-            } else {
-              radius = Math.abs(pt.y - paint.basePoint.y) / 2;
-            }
+            var centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
+            var centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
             var center = new Point(centerX, centerY);
-            var c = new Circle(paint.context, center, radius);
-            if (paint.currentTool == paint.CIRCLE) {
-              c.stroke();
-            } else {
-              c.fill();
-            }
-          } else if (paint.currentTool == paint.RECT || paint.currentTool == paint.FILLED_RECT) {
+            var filled = (paint.currentTool == paint.FILLED_CIRCLE);
+            var c = new Circle(paint.context, center, Math.abs(pt.x - paint.basePoint.x) / 2, filled, paint.currentColor);
+            paint.content.push(c);
             paint.repaint();
+            paint.basePoint = null;
+          } else if (paint.currentTool == paint.RECT || paint.currentTool == paint.FILLED_RECT) {
             var width = pt.x - paint.basePoint.x;
             var height = pt.y - paint.basePoint.y;
+            var filled = (paint.currentTool == paint.FILLED_RECT);
             var d = new Dimension(width, height);
-            var rect = new Rect(paint.context, paint.basePoint, d);
-            if (paint.currentTool == paint.RECT) {
-              rect.stroke();
-            } else {
-              rect.fill();
-            }
-            paint.previousPoint = pt;
-          } 
+            var rect = new Rect(paint.context, paint.basePoint, d, filled, paint.currentColor);
+            paint.content.push(rect);
+            paint.repaint();
+            paint.basePoint = null;
+          }
         }
-      }
 
-      function enableButton(btn) {
-        var buttons = document.getElementsByClassName('toolbar_btn');
-        Array.prototype.forEach.call(buttons, function (element, index) {
-          element.classList.remove('active');
-          element.classList.add('inactive');
-        });
-        btn.classList.add('active');
-        btn.classList.remove('inactive');
-      }
+        function drawing(event) {
+          var pt = new Point(event.clientX - paint.canvas.offsetLeft,
+                  event.clientY - paint.canvas.offsetTop);
+          if (paint.isDrawing) {
+            if (paint.currentTool == paint.LINE) {
+              paint.repaint();
+              var l = new Line(paint.context, paint.basePoint, pt, paint.currentColor);
+              l.stroke();
+            } else if (paint.currentTool == paint.PENCIL) {
+              var l = new Line(paint.context, paint.previousPoint, pt, paint.currentColor);
+              pencil.addLine(l);
+              l.stroke();
+              paint.previousPoint = pt;
+            } else if (paint.currentTool == paint.CIRCLE || paint.currentTool == paint.FILLED_CIRCLE) {
+              paint.repaint();
+              var centerX, centerY;
+              if (pt.x > paint.basePoint.x) {
+                centerX = paint.basePoint.x + (pt.x - paint.basePoint.x) / 2;
+              } else {
+                centerX = paint.basePoint.x - (paint.basePoint.x - pt.x) / 2;
+              }
+              if (pt.y > paint.basePoint.y) {
+                centerY = paint.basePoint.y + (pt.y - paint.basePoint.y) / 2;
+              } else {
+                centerY = paint.basePoint.y - (paint.basePoint.y - pt.y) / 2;
+              }
+              var radius;
+              if (Math.abs(pt.x - paint.basePoint.x) > Math.abs(pt.y - paint.basePoint.y)) {
+                radius = Math.abs(pt.x - paint.basePoint.x) / 2;
+              } else {
+                radius = Math.abs(pt.y - paint.basePoint.y) / 2;
+              }
+              var center = new Point(centerX, centerY);
+              var filled = paint.currentTool == paint.FILLED_CIRCLE;
+              var c = new Circle(paint.context, center, radius, filled, paint.currentColor);
+              if (paint.currentTool == paint.CIRCLE) {
+                c.stroke();
+              } else {
+                c.fill();
+              }
+            } else if (paint.currentTool == paint.RECT || paint.currentTool == paint.FILLED_RECT) {
+              paint.repaint();
+              var width = pt.x - paint.basePoint.x;
+              var height = pt.y - paint.basePoint.y;
+              var d = new Dimension(width, height);
+              var filled = paint.currentTool == paint.FILLED_RECT;
+              var rect = new Rect(paint.context, paint.basePoint, d, filled, paint.currentColor);
+              if (paint.currentTool == paint.RECT) {
+                rect.stroke();
+              } else {
+                rect.fill();
+              }
+              paint.previousPoint = pt;
+            }
+          }
+        }
 
-      window.onload = function () {
-        paint = new Paint();
-        paint.setCurrentTool(paint.PENCIL);
-        paint.canvas.addEventListener('mousedown', startDrawing, false);
-        paint.canvas.addEventListener('mouseup', stopDrawing, false);
-        paint.canvas.addEventListener('mousemove', drawing, false);
+        function enableButton(btn) {
+          var buttons = document.getElementsByClassName('toolbar_btn');
+          Array.prototype.forEach.call(buttons, function (element, index) {
+            element.classList.remove('active');
+            element.classList.add('inactive');
+          });
+          btn.classList.add('active');
+          btn.classList.remove('inactive');
+        }
 
-        document.getElementById("line_tool").addEventListener('click', function () {
-          enableButton(this);
-          paint.setCurrentTool(paint.LINE);
-        });
-        document.getElementById("pencil_tool").addEventListener('click', function () {
-          enableButton(this);
+        window.onload = function () {
+          paint = new Paint();
           paint.setCurrentTool(paint.PENCIL);
-        });
-        document.getElementById("circle_tool").addEventListener('click', function () {
-          enableButton(this);
-          paint.setCurrentTool(paint.CIRCLE);
-        });
-        document.getElementById("fcircle_tool").addEventListener('click', function () {
-          enableButton(this);
-          paint.setCurrentTool(paint.FILLED_CIRCLE);
-        });
-        document.getElementById("rect_tool").addEventListener('click', function () {
-          enableButton(this);
-          paint.setCurrentTool(paint.RECT);
-        });
-        document.getElementById("frect_tool").addEventListener('click', function () {
-          enableButton(this);
-          paint.setCurrentTool(paint.FILLED_RECT);
-        });
-      };
+          paint.canvas.addEventListener('mousedown', canvasClicked, false);
+          paint.canvas.addEventListener('mouseup', stopDrawing, false);
+          paint.canvas.addEventListener('mousemove', drawing, false);
+
+          document.getElementById("colors").addEventListener('click', function () {
+            paint.currentColor = this.value;
+          });
+
+          document.getElementById("save").addEventListener('click', function () {
+            var imgUrl = paint.canvas.toDataURL();
+            window.location.href = imgUrl;
+          });
+
+          document.getElementById("line_tool").addEventListener('click', function () {
+            enableButton(this);
+            paint.setCurrentTool(paint.LINE);
+          });
+          document.getElementById("pencil_tool").addEventListener('click', function () {
+            enableButton(this);
+            paint.setCurrentTool(paint.PENCIL);
+          });
+          document.getElementById("circle_tool").addEventListener('click', function () {
+            enableButton(this);
+            paint.setCurrentTool(paint.CIRCLE);
+          });
+          document.getElementById("fcircle_tool").addEventListener('click', function () {
+            enableButton(this);
+            paint.setCurrentTool(paint.FILLED_CIRCLE);
+          });
+          document.getElementById("rect_tool").addEventListener('click', function () {
+            enableButton(this);
+            paint.setCurrentTool(paint.RECT);
+          });
+          document.getElementById("frect_tool").addEventListener('click', function () {
+            enableButton(this);
+            paint.setCurrentTool(paint.FILLED_RECT);
+          });
+        };
     </script>
   </body>
 </html>
